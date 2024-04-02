@@ -150,9 +150,12 @@ func policyRuleForServer() []v1.PolicyRule {
 			},
 			Resources: []string{
 				"jobs",
+				"cronjobs",
+				"cronjobs/finalizers",
 			},
 			Verbs: []string{
 				"create",
+				"update",
 			},
 		},
 	}
@@ -246,9 +249,12 @@ func policyRuleForServerApplicationSourceNamespaces() []v1.PolicyRule {
 			},
 			Resources: []string{
 				"jobs",
+				"cronjobs",
+				"cronjobs/finalizers",
 			},
 			Verbs: []string{
 				"create",
+				"update",
 			},
 		},
 	}
@@ -275,7 +281,6 @@ func policyRuleForServerClusterRole() []v1.PolicyRule {
 			},
 			Resources: []string{
 				"applications",
-				"applicationsets",
 			},
 			Verbs: []string{
 				"list",
@@ -299,12 +304,25 @@ func policyRuleForServerClusterRole() []v1.PolicyRule {
 			},
 			Resources: []string{
 				"jobs",
+				"cronjobs",
+				"cronjobs/finalizers",
 			},
 			Verbs: []string{
 				"create",
+				"update",
 			},
 		},
 	}
+}
+
+func policyRuleForGrafana(client client.Client) []v1.PolicyRule {
+	rules := []v1.PolicyRule{}
+
+	// Need additional policy rules if we are running on openshift, else the stateful set won't have the right
+	// permissions to start
+	rules = appendOpenShiftNonRootSCC(rules, client)
+
+	return rules
 }
 
 func getPolicyRuleList(client client.Client) []struct {
@@ -330,6 +348,9 @@ func getPolicyRuleList(client client.Client) []struct {
 		}, {
 			name:       common.ArgoCDRedisComponent,
 			policyRule: policyRuleForRedis(client),
+		}, {
+			name:       common.ArgoCDOperatorGrafanaComponent,
+			policyRule: policyRuleForGrafana(client),
 		},
 	}
 }
@@ -380,146 +401,4 @@ func appendOpenShiftNonRootSCC(rules []v1.PolicyRule, client client.Client) []v1
 		rules = append(rules, orules)
 	}
 	return rules
-}
-
-func policyRuleForApplicationSetController() []v1.PolicyRule {
-	return []v1.PolicyRule{
-		// ApplicationSet
-		{
-			APIGroups: []string{"argoproj.io"},
-			Resources: []string{
-				"applications",
-				"applicationsets",
-				"applicationsets/finalizers",
-			},
-			Verbs: []string{
-				"create",
-				"delete",
-				"get",
-				"list",
-				"patch",
-				"update",
-				"watch",
-			},
-		},
-		// ApplicationSet Status
-		{
-			APIGroups: []string{"argoproj.io"},
-			Resources: []string{
-				"applicationsets/status",
-			},
-			Verbs: []string{
-				"get",
-				"patch",
-				"update",
-			},
-		},
-		// AppProjects
-		{
-			APIGroups: []string{"argoproj.io"},
-			Resources: []string{
-				"appprojects",
-			},
-			Verbs: []string{
-				"get",
-			},
-		},
-
-		// Events
-		{
-			APIGroups: []string{""},
-			Resources: []string{
-				"events",
-			},
-			Verbs: []string{
-				"create",
-				"get",
-				"list",
-				"patch",
-				"watch",
-			},
-		},
-
-		// ConfigMaps
-		{
-			APIGroups: []string{""},
-			Resources: []string{
-				"configmaps",
-			},
-			Verbs: []string{
-				"create",
-				"update",
-				"delete",
-				"get",
-				"list",
-				"patch",
-				"watch",
-			},
-		},
-
-		// Secrets
-		{
-			APIGroups: []string{""},
-			Resources: []string{
-				"secrets",
-			},
-			Verbs: []string{
-				"get",
-				"list",
-				"watch",
-			},
-		},
-
-		// Deployments
-		{
-			APIGroups: []string{"apps", "extensions"},
-			Resources: []string{
-				"deployments",
-			},
-			Verbs: []string{
-				"get",
-				"list",
-				"watch",
-			},
-		},
-
-		// leases
-		{
-			APIGroups: []string{"coordination.k8s.io"},
-			Resources: []string{
-				"leases",
-			},
-			Verbs: []string{
-				"create",
-				"delete",
-				"get",
-				"list",
-				"patch",
-				"update",
-				"watch",
-			},
-		},
-	}
-}
-
-func policyRuleForServerApplicationSetSourceNamespaces() []v1.PolicyRule {
-	return []v1.PolicyRule{
-		{
-			APIGroups: []string{
-				"argoproj.io",
-			},
-			Resources: []string{
-				"applicationsets",
-			},
-			Verbs: []string{
-				"create",
-				"get",
-				"list",
-				"patch",
-				"update",
-				"watch",
-				"delete",
-			},
-		},
-	}
 }

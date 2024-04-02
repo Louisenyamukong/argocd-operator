@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	appsv1 "github.com/openshift/api/apps/v1"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -221,7 +222,7 @@ func TestNewKeycloakTemplate_testDeploymentConfig(t *testing.T) {
 
 	assert.Equal(t, dc.Spec.Replicas, fakeReplicas)
 
-	strategy := oappsv1.DeploymentStrategy{
+	strategy := appsv1.DeploymentStrategy{
 		Type: "Recreate",
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{

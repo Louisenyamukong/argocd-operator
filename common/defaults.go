@@ -42,9 +42,6 @@ const (
 	// ArgoCDNotificationsControllerComponent is the name of the Notifications controller control plane component
 	ArgoCDNotificationsControllerComponent = "argocd-notifications-controller"
 
-	// ArgoCDApplicationSetControllerComponent is the name of the ApplictionSet controller control plane component
-	ArgoCDApplicationSetControllerComponent = "argocd-applicationset-controller"
-
 	// ArgoCDOperatorGrafanaComponent is the name of the Grafana control plane component
 	ArgoCDOperatorGrafanaComponent = "argocd-grafana"
 
@@ -64,7 +61,7 @@ const (
 	ArgoCDDefaultArgoImage = "quay.io/argoproj/argocd"
 
 	// ArgoCDDefaultArgoVersion is the Argo CD container image digest to use when version not specified.
-	ArgoCDDefaultArgoVersion = "sha256:5f1de1b4d959868c1e006e08d46361c8f019d9730e74bc1feeab8c7b413f1187" // v2.10.1
+	ArgoCDDefaultArgoVersion = "sha256:5d3e4347349041b6ac5c93082bdacbb7f4e00ffe0d0cb5ff54e1c2a575544927" // v2.9.10
 
 	// ArgoCDDefaultBackupKeyLength is the length of the generated default backup key.
 	ArgoCDDefaultBackupKeyLength = 32
@@ -122,7 +119,7 @@ const (
 	ArgoCDDefaultExportJobImage = "quay.io/argoprojlabs/argocd-operator-util"
 
 	// ArgoCDDefaultExportJobVersion is the export job container image tag to use when not specified.
-	ArgoCDDefaultExportJobVersion = "sha256:6f80965a2bef1c80875be0995b18d9be5a6ad4af841cbc170ed3c60101a7deb2" // 0.5.0
+	ArgoCDDefaultExportJobVersion = "sha256:4549eec1eb071545ee171a8ced1ccd9b45a8fa4d37b4615fdae35aabab47cf41" // 0.9.0
 
 	// ArgoCDDefaultExportLocalCapicity is the default capacity to use for local export.
 	ArgoCDDefaultExportLocalCapicity = "2Gi"
@@ -132,6 +129,39 @@ const (
 
 	// ArgoCDDefaultGAAnonymizeUsers is the default value for anonymizing google analytics users.
 	ArgoCDDefaultGAAnonymizeUsers = false
+
+	// ArgoCDDefaultGrafanaAdminUsername is the Grafana admin username to use when not specified.
+	ArgoCDDefaultGrafanaAdminUsername = "admin"
+
+	// ArgoCDDefaultGrafanaAdminPasswordLength is the length of the generated default Grafana admin password.
+	ArgoCDDefaultGrafanaAdminPasswordLength = 32
+
+	// ArgoCDDefaultGrafanaAdminPasswordNumDigits is the number of digits to use for the generated default Grafana admin password.
+	ArgoCDDefaultGrafanaAdminPasswordNumDigits = 5
+
+	// ArgoCDDefaultGrafanaAdminPasswordNumSymbols is the number of symbols to use for the generated default Grafana admin password.
+	ArgoCDDefaultGrafanaAdminPasswordNumSymbols = 5
+
+	// ArgoCDDefaultGrafanaImage is the Grafana container image to use when not specified.
+	ArgoCDDefaultGrafanaImage = "grafana/grafana"
+
+	// ArgoCDDefaultGrafanaReplicas is the default Grafana replica count.
+	ArgoCDDefaultGrafanaReplicas = int32(1)
+
+	// ArgoCDDefaultGrafanaSecretKeyLength is the length of the generated default Grafana secret key.
+	ArgoCDDefaultGrafanaSecretKeyLength = 20
+
+	// ArgoCDDefaultGrafanaSecretKeyNumDigits is the number of digits to use for the generated default Grafana secret key.
+	ArgoCDDefaultGrafanaSecretKeyNumDigits = 5
+
+	// ArgoCDDefaultGrafanaSecretKeyNumSymbols is the number of symbols to use for the generated default Grafana secret key.
+	ArgoCDDefaultGrafanaSecretKeyNumSymbols = 0
+
+	// ArgoCDDefaultGrafanaConfigPath is the default Grafana configuration directory when not specified.
+	ArgoCDDefaultGrafanaConfigPath = "/var/lib/grafana"
+
+	// ArgoCDDefaultGrafanaVersion is the Grafana container image tag to use when not specified.
+	ArgoCDDefaultGrafanaVersion = "sha256:afef23a1b4cf159ec3180aac3ad693c10e560657313bfe3ec81f344ace6d2f05" // 6.7.2
 
 	// ArgoCDDefaultHelpChatURL is the default help chat URL.
 	ArgoCDDefaultHelpChatURL = ""
@@ -276,9 +306,6 @@ vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOf
 `
 	// OperatorMetricsPort is the port that is used to expose default controller-runtime metrics for the operator pod.
 	OperatorMetricsPort = 8080
-
-	// NotificationsControllerMetricsPort is the port that is used to expose notifications controller metrics.
-	NotificationsControllerMetricsPort = 9001
 )
 
 // DefaultLabels returns the default set of labels for controllers.

@@ -172,12 +172,6 @@ type ArgoCDApplicationSet struct {
 
 	// Enabled is the flag to enable the Application Set Controller during ArgoCD installation. (optional, default `true`)
 	Enabled *bool `json:"enabled,omitempty"`
-
-	// SourceNamespaces defines the namespaces applicationset resources are allowed to be created in
-	SourceNamespaces []string `json:"sourceNamespaces,omitempty"`
-
-	// SCMProviders defines the list of allowed custom SCM provider API URLs
-	SCMProviders []string `json:"scmProviders,omitempty"`
 }
 
 func (a *ArgoCDApplicationSet) IsEnabled() bool {
@@ -738,7 +732,7 @@ type ArgoCDSpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Google Analytics Anonymize Users'",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	GAAnonymizeUsers bool `json:"gaAnonymizeUsers,omitempty"`
 
-	// Deprecated: Grafana defines the Grafana server options for ArgoCD.
+	// Grafana defines the Grafana server options for ArgoCD.
 	Grafana ArgoCDGrafanaSpec `json:"grafana,omitempty"`
 
 	// HA options for High Availability support for the Redis component.

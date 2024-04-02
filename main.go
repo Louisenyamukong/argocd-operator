@@ -43,13 +43,10 @@ import (
 
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	notificationsConfig "github.com/argoproj-labs/argocd-operator/controllers/notificationsconfiguration"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -102,26 +99,7 @@ func main() {
 	flag.BoolVar(&enableHTTP2, "enable-http2", enableHTTP2, "If HTTP/2 should be enabled for the metrics and webhook servers.")
 	flag.BoolVar(&secureMetrics, "metrics-secure", secureMetrics, "If the metrics endpoint should be served securely.")
 
-	//Configure log level
-	logLevelStr := strings.ToLower(os.Getenv("LOG_LEVEL"))
-	logLevel := zapcore.InfoLevel
-	switch logLevelStr {
-	case "debug":
-		logLevel = zapcore.DebugLevel
-	case "info":
-		logLevel = zapcore.InfoLevel
-	case "warn":
-		logLevel = zapcore.WarnLevel
-	case "error":
-		logLevel = zapcore.ErrorLevel
-	case "panic":
-		logLevel = zapcore.PanicLevel
-	case "fatal":
-		logLevel = zapcore.FatalLevel
-	}
-
 	opts := zap.Options{
-		Level:       logLevel,
 		Development: true,
 	}
 	opts.BindFlags(flag.CommandLine)
@@ -255,13 +233,6 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArgoCDExport")
-		os.Exit(1)
-	}
-	if err = (&notificationsConfig.NotificationsConfigurationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NotificationsConfiguration")
 		os.Exit(1)
 	}
 

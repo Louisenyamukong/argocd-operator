@@ -189,16 +189,13 @@ func (r *ReconcileArgoCD) reconcileRole(name string, policyRules []v1.PolicyRule
 func (r *ReconcileArgoCD) reconcileRoleForApplicationSourceNamespaces(name string, policyRules []v1.PolicyRule, cr *argoproj.ArgoCD) error {
 
 	// create policy rules for each source namespace for ArgoCD Server
-	sourceNamespaces, err := r.getSourceNamespaces(cr)
-	if err != nil {
-		return err
-	}
+	for _, sourceNamespace := range cr.Spec.SourceNamespaces {
 
-	for _, sourceNamespace := range sourceNamespaces {
 		namespace := &corev1.Namespace{}
 		if err := r.Client.Get(context.TODO(), types.NamespacedName{Name: sourceNamespace}, namespace); err != nil {
 			return err
 		}
+
 		// do not reconcile roles for namespaces already containing managed-by label
 		// as it already contains roles with permissions to manipulate application resources
 		// reconciled during reconcilation of ManagedNamespaces
@@ -214,12 +211,6 @@ func (r *ReconcileArgoCD) reconcileRoleForApplicationSourceNamespaces(name strin
 			continue
 		}
 
-		// reconcile roles only if another ArgoCD instance is not already set as value for managed-by-cluster-argocd label
-		if value, ok := namespace.Labels[common.ArgoCDManagedByClusterArgoCDLabel]; ok && value != cr.Namespace {
-			log.Info(fmt.Sprintf("Namespace already has label set to argocd instance %s. Thus, skipping namespace %s", value, namespace.Name))
-			continue
-		}
-
 		log.Info(fmt.Sprintf("Reconciling role for %s", namespace.Name))
 
 		role := newRoleForApplicationSourceNamespaces(namespace.Name, policyRules, cr)
@@ -227,24 +218,31 @@ func (r *ReconcileArgoCD) reconcileRoleForApplicationSourceNamespaces(name strin
 			return err
 		}
 		role.Namespace = namespace.Name
-		// patch rules if appset in source namespace is allowed
-		if contains(r.getApplicationSetSourceNamespaces(cr), sourceNamespace) {
-			role.Rules = append(role.Rules, policyRuleForServerApplicationSetSourceNamespaces()...)
-		}
-
-		created := false
 		existingRole := v1.Role{}
 		err := r.Client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: namespace.Name}, &existingRole)
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				return fmt.Errorf("failed to reconcile the role for the service account associated with %s : %s", name, err)
 			}
+		}
 
-			log.Info(fmt.Sprintf("creating role %s for Argo CD instance %s in namespace %s", role.Name, cr.Name, namespace))
-			if err := r.Client.Create(context.TODO(), role); err != nil {
-				return err
+		// do not reconcile roles for namespaces already containing managed-by-cluster-argocd label
+		// as it already contains roles reconciled during reconcilation of ManagedNamespaces
+		if _, ok := r.ManagedSourceNamespaces[sourceNamespace]; ok {
+			// If sourceNamespace includes the name but role is missing in the namespace, create the role
+			if reflect.DeepEqual(existingRole, v1.Role{}) {
+				log.Info(fmt.Sprintf("creating role %s for Argo CD instance %s in namespace %s", role.Name, cr.Name, namespace))
+				if err := r.Client.Create(context.TODO(), role); err != nil {
+					return err
+				}
 			}
-			created = true
+			continue
+		}
+
+		// reconcile roles only if another ArgoCD instance is not already set as value for managed-by-cluster-argocd label
+		if value, ok := namespace.Labels[common.ArgoCDManagedByClusterArgoCDLabel]; ok && value != "" {
+			log.Info(fmt.Sprintf("Namespace already has label set to argocd instance %s. Thus, skipping namespace %s", value, namespace.Name))
+			continue
 		}
 
 		// Get the latest value of namespace before updating it
@@ -252,16 +250,12 @@ func (r *ReconcileArgoCD) reconcileRoleForApplicationSourceNamespaces(name strin
 			return err
 		}
 		// Update namespace with managed-by-cluster-argocd label
-		if namespace.Labels == nil {
-			namespace.Labels = make(map[string]string)
-		}
 		namespace.Labels[common.ArgoCDManagedByClusterArgoCDLabel] = cr.Namespace
 		if err := r.Client.Update(context.TODO(), namespace); err != nil {
 			log.Error(err, fmt.Sprintf("failed to add label from namespace [%s]", namespace.Name))
 		}
-
 		// if the Rules differ, update the Role
-		if !created && !reflect.DeepEqual(existingRole.Rules, role.Rules) {
+		if !reflect.DeepEqual(existingRole.Rules, role.Rules) {
 			existingRole.Rules = role.Rules
 			if err := r.Client.Update(context.TODO(), &existingRole); err != nil {
 				return err
@@ -269,9 +263,6 @@ func (r *ReconcileArgoCD) reconcileRoleForApplicationSourceNamespaces(name strin
 		}
 
 		if _, ok := r.ManagedSourceNamespaces[sourceNamespace]; !ok {
-			if r.ManagedSourceNamespaces == nil {
-				r.ManagedSourceNamespaces = make(map[string]string)
-			}
 			r.ManagedSourceNamespaces[sourceNamespace] = ""
 		}
 
